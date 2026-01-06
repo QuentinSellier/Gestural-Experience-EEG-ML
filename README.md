@@ -44,7 +44,7 @@ The code requires the following Python libraries:
 *   `scikit-learn`
 *   `xlsxwriter`
 
-To install dependencies:
+## Citation
+If you use this code or methodology, please cite the original dissertation:
 
-```bash
-pip install pandas numpy scikit-learn xlsxwriter
+Sellier, Q. (2023). Exploring the Impact of Gestural Interaction Technologies on the Experience: A Marketing and HCI Perspective (Doctoral dissertation). Université catholique de Louvain, Louvain School of Management.
