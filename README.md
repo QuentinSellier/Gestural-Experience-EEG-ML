@@ -1,6 +1,6 @@
 # Gestural-Experience-EEG-ML
 
-This repository contains the Python implementation of the machine learning analysis presented in **Essay 3: "Understanding the Impact of Gestural Interaction Technologies on the Experience"**, as part of the doctoral dissertation by Quentin Sellier (2023).
+This repository contains the Python implementation of the machine learning analysis presented in **Immersive E-Commerce Interfaces: Evaluating Customer Experience in a Gesture-Controlled Digital Catalog** (Sellier et al., 2026).
 
 ## Project Overview
 
@@ -46,9 +46,9 @@ The code requires the following Python libraries:
 
 ## Citation
 
-If you use this code or methodology, please cite the original dissertation:
+If you use this code or methodology, please cite the original article:
 
-> Sellier, Q. (2023). _Exploring the Impact of Gestural Interaction Technologies on the Experience: A Marketing and HCI Perspective_ (Doctoral dissertation). Université catholique de Louvain, Louvain School of Management.
+> Sellier, Q., Poncin, I., Vande Kerkhove, C., Vanderdonckt, J. (2026). _Immersive E-Commerce Interfaces: Evaluating Customer Experience in a Gesture-Controlled Digital Catalog_ [Manuscript submitted for publication]. Université catholique de Louvain, Louvain School of Management.
 
 ## License
 
