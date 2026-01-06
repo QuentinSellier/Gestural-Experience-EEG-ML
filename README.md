@@ -16,24 +16,24 @@ The analysis uses data collected via a **Bitbrain "Diadem" dry-EEG headset**. Th
 
 ## Methodology
 
-The pipeline implemented in `eeg_analysis.py` follows these steps:
+The pipeline implemented in `eeg_analysis.py` corresponds to the four main code blocks:
 
-1.  **Data Filtering**: 
+1.  **Data Loading & Filtering**:
     *   Extraction of specific interaction periods (removing non-shopping phases).
     *   Cleaning of non-integer values and quality filtering.
-2.  **Outlier Management**: 
-    *   Application of an Interquartile Range (IQR) filter (outer boundary technique) to detect and impute outliers/artifacts.
-3.  **Duration Correction**: 
-    *   Since gestural sessions were generally longer (61% of total time) than mouse sessions, a **random removal simulation** is applied.
-    *   Data points are randomly removed from the longer sessions to equalize duration.
-    *   This process is simulated 2,000 to 5,000 times to ensure statistical stability.
-4.  **Feature Extraction**:
-    *   **Average Max Peak**: The highest peak of brain activity (averaged over simulations).
-    *   **Proportion of High Activity**: The percentage of data points exceeding a threshold of 100 (high cognitive/emotional intensity).
-5.  **Classification**:
+
+2.  **Outlier Management**:
+    *   Application of an Interquartile Range (IQR) filter (outer boundary technique, multiplier = 3) to detect and impute outliers/artifacts in the signal.
+
+3.  **Feature Extraction & Metrics**:
+    *   **Proportion of High Activity**: Calculation of the percentage of data points exceeding a threshold of 100.
+    *   **Duration Correction**: Since gestural sessions were generally longer (61% of total time), a **random removal simulation** (2,000 to 5,000 iterations) is applied to equalize durations before peak analysis.
+    *   **Average Max Peak**: Computation of the highest peak of brain activity, averaged over the simulations.
+
+4.  **Classification (Machine Learning)**:
     *   **Model**: Random Forest Classifier (`sklearn.ensemble.RandomForestClassifier`).
     *   **Training**: Bootstrap sampling with 100,000 iterations.
-    *   **Evaluation**: Accuracy, Precision, Recall, and F1-score.
+    *   **Evaluation**: Accuracy, Precision, Recall, F1-score, and Feature Importance.
 
 ## Prerequisites
 
