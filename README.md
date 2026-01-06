@@ -48,7 +48,7 @@ The code requires the following Python libraries:
 
 If you use this code or methodology, please cite the original article:
 
-> Sellier, Q., Poncin, I., Vande Kerkhove, C., Vanderdonckt, J. (2026). _Immersive E-Commerce Interfaces: Evaluating Customer Experience in a Gesture-Controlled Digital Catalog_ [Manuscript submitted for publication]. Université catholique de Louvain, Louvain School of Management.
+> Sellier, Q., Poncin, I., Vande Kerkhove, C., Vanderdonckt, J. (2026). _Immersive E-Commerce Interfaces: Evaluating Customer Experience in a Gesture-Controlled Digital Catalog_ [Manuscript submitted for publication]. Université catholique de Louvain.
 
 ## License
 
