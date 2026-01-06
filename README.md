@@ -1,4 +1,4 @@
-# EEG-Gesture-Interaction-ML
+# Gestural-Experience-EEG-ML
 
 This repository contains the Python implementation of the machine learning analysis presented in **Essay 3: "Understanding the Impact of Gestural Interaction Technologies on the Experience"**, as part of the doctoral dissertation by Quentin Sellier (2023).
 
