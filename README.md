@@ -45,6 +45,11 @@ The code requires the following Python libraries:
 *   `xlsxwriter`
 
 ## Citation
+
 If you use this code or methodology, please cite the original dissertation:
 
-Sellier, Q. (2023). Exploring the Impact of Gestural Interaction Technologies on the Experience: A Marketing and HCI Perspective (Doctoral dissertation). Université catholique de Louvain, Louvain School of Management.
+> Sellier, Q. (2023). _Exploring the Impact of Gestural Interaction Technologies on the Experience: A Marketing and HCI Perspective_ (Doctoral dissertation). Université catholique de Louvain, Louvain School of Management.
+
+## License
+
+MIT License
