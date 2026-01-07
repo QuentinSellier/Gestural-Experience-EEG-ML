@@ -1,6 +1,6 @@
 # Gestural-Experience-EEG-ML
 
-This repository contains the Python implementation of the machine learning analysis presented in **Immersive E-Commerce Interfaces: Evaluating Customer Experience in a Gesture-Controlled Digital Catalog** (Sellier et al., 2026).
+This repository contains the Python implementation of the machine learning analysis presented in **Immersive E-Commerce Interfaces: Evaluating Customer Experience in a Gesture-Controlled Digital Catalog** (Sellier et al., 2025).
 
 ## Project Overview
 
@@ -48,7 +48,7 @@ The code requires the following Python libraries:
 
 If you use this code or methodology, please cite the original article:
 
-> Sellier, Q., Poncin, I., Vande Kerkhove, C., Vanderdonckt, J. (2026). _Immersive E-Commerce Interfaces: Evaluating Customer Experience in a Gesture-Controlled Digital Catalog_ [Manuscript submitted for publication]. Université catholique de Louvain.
+> Sellier, Q., Poncin, I., Vande Kerkhove, C., Vanderdonckt, J. (2025). _Immersive E-Commerce Interfaces: Evaluating Customer Experience in a Gesture-Controlled Digital Catalog_ [Manuscript submitted for publication]. Preprint available at SSRN: https://ssrn.com/abstract=5405608
 
 ## License
 
