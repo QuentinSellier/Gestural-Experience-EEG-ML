@@ -1,0 +1,10 @@
+[project]
+name = "gestural-experience-eeg-ml"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "numpy>=2.4.6",
+    "openpyxl>=3.1.5",
+    "pandas>=3.0.3",
+    "scikit-learn>=1.9.0",
+]

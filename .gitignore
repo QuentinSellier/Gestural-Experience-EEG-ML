@@ -1,0 +1,15 @@
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+
+# uv / virtual environment
+.venv/
+
+# Raw participant EEG data (private, not distributed)
+data/
+
+# Generated result files
+output/
