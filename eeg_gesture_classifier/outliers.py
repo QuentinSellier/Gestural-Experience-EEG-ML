@@ -7,19 +7,12 @@ import numpy as np
 from .config import AnalysisConfig, ParticipantData
 
 
-def apply_asymmetric_iqr_filter(
-    data: ParticipantData, config: AnalysisConfig
-) -> ParticipantData:
+def apply_iqr_filter(data: ParticipantData, config: AnalysisConfig) -> ParticipantData:
     """Apply a per-participant IQR filter (outer boundary, multiplier 3).
 
     The acceptance range is computed on the pooled gesture+mouse signal for each
-    participant and metric. Gesture and mouse are then treated differently, by design:
-
-    - Gesture: out-of-range values are CLAMPED to the boundary (length preserved).
-    - Mouse:   out-of-range values are DROPPED (length shrinks).
-
-    This asymmetry is intentional and is part of the published methodology; it must
-    not be made symmetric.
+    participant and metric. In both conditions, out-of-range values are replaced by
+    the boundary value, so that session lengths are preserved.
     """
     n_participants = config.n_participants
     n_metrics = config.n_variables_per_condition
@@ -42,11 +35,9 @@ def apply_asymmetric_iqr_filter(
             lower_bound = q1 - config.iqr_multiplier * iqr
             upper_bound = q3 + config.iqr_multiplier * iqr
 
-            filtered[participant_index][metric_index] = np.clip(
-                gesture, lower_bound, upper_bound
+            filtered[participant_index][metric_index] = np.clip(gesture, lower_bound, upper_bound)
+            filtered[participant_index][metric_index + n_metrics] = np.clip(
+                mouse, lower_bound, upper_bound
             )
-            filtered[participant_index][metric_index + n_metrics] = mouse[
-                (mouse >= lower_bound) & (mouse <= upper_bound)
-            ]
 
     return filtered

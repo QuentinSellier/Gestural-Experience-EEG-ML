@@ -28,7 +28,7 @@ from eeg_gesture_classifier.io_results import (
     write_classification_report,
     write_metric_table,
 )
-from eeg_gesture_classifier.outliers import apply_asymmetric_iqr_filter
+from eeg_gesture_classifier.outliers import apply_iqr_filter
 
 
 def run_pipeline(config: AnalysisConfig) -> ClassificationResults:
@@ -42,7 +42,7 @@ def run_pipeline(config: AnalysisConfig) -> ClassificationResults:
     ensure_output_dir(config)
 
     raw_data = load_all_participants(config)
-    filtered_data = apply_asymmetric_iqr_filter(raw_data, config)
+    filtered_data = apply_iqr_filter(raw_data, config)
 
     # Deterministic features (no RNG) first, then the RNG-consuming peak simulations.
     proportion = compute_proportion_above_threshold(filtered_data, config)

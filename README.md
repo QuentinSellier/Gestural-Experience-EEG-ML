@@ -24,17 +24,17 @@ The analysis lives in the `eeg_gesture_classifier` package and is run through `m
 
 2.  **Outlier Management** (`outliers.py`):
     *   Per-participant Interquartile Range (IQR) filter (outer boundary, multiplier = 3), with the range computed on the pooled gesture+mouse signal.
-    *   Gesture and mouse are handled differently by design: gesture out-of-range values are **clamped** to the boundary, while mouse out-of-range values are **dropped**.
+    *   Out-of-range values are replaced by the boundary value in both conditions.
 
 3.  **Feature Extraction & Metrics** (`features.py`):
     *   **Proportion of High Activity**: fraction of data points exceeding a threshold of 100.
-    *   **Duration Correction**: since gestural sessions were generally longer, a random-removal simulation (`simulations_peak = 2000`) equalizes durations before peak analysis.
+    *   **Duration Correction**: since gestural sessions were generally longer, a random-removal simulation (`simulations_peak = 5000`) equalizes durations before peak analysis.
     *   **Average Max Peak**: highest peak of brain activity, averaged over the simulations.
 
 4.  **Classification** (`classification.py`):
     *   **Model**: Random Forest Classifier (`sklearn.ensemble.RandomForestClassifier`, 100 trees).
     *   **Features**: max peak of Engagement and Valence, plus proportion-above-threshold of Memorization and Workload.
-    *   **Training**: averaged over `simulations_ml = 1000` random train/test splits.
+    *   **Training**: averaged over `simulations_ml = 100000` participant-grouped train/test splits (both sessions of a participant always stay on the same side).
     *   **Evaluation**: Accuracy, Precision, Recall, F1-score, confusion matrix, and feature importances.
 
 All configuration (paths, thresholds, simulation counts, the random seed) is centralized in `eeg_gesture_classifier/config.py`. The run is seeded (`random_seed = 42`) and reproducible.
@@ -43,10 +43,11 @@ All configuration (paths, thresholds, simulation counts, the random seed) is cen
 
 ```
 main.py                       # entry point: runs the full pipeline
+recalcul_tableaux_eeg.py      # statistical comparisons of the EEG summaries (Tables 6 and 7)
 eeg_gesture_classifier/
 ├── config.py                 # AnalysisConfig dataclass + shared types
 ├── data_loading.py           # read, filter and clean the raw .xlsx files
-├── outliers.py               # asymmetric IQR filter
+├── outliers.py               # IQR filter (boundary replacement)
 ├── features.py               # proportion, mean, duration-corrected max peak
 ├── classification.py         # Random Forest simulations + results
 └── io_results.py             # write CSV outputs
@@ -61,6 +62,7 @@ Dependencies are managed with [uv](https://docs.astral.sh/uv/). To set up the en
 ```bash
 uv sync                 # create the virtual environment and install dependencies
 uv run python main.py   # run the full pipeline
+uv run python recalcul_tableaux_eeg.py --order <questionnaire.xlsx>   # Tables 6 and 7
 ```
 
 The code requires the following Python libraries:
@@ -68,6 +70,7 @@ The code requires the following Python libraries:
 *   `pandas`
 *   `numpy`
 *   `scikit-learn`
+*   `scipy`
 *   `openpyxl` (reading the input `.xlsx` data files via `pandas.read_excel`)
 
 ## Outputs
