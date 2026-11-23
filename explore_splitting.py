@@ -24,7 +24,7 @@ from eeg_gesture_classifier.features import (
     compute_average_corrected_max_peak,
     compute_proportion_above_threshold,
 )
-from eeg_gesture_classifier.outliers import apply_asymmetric_iqr_filter
+from eeg_gesture_classifier.outliers import apply_iqr_filter
 
 # Feature sets, expressed as (max-peak columns, proportion columns) into a 4-metric
 # block where 0=engagement, 1=memorization, 2=valence/attraction, 3=workload.
@@ -42,7 +42,7 @@ def main() -> None:
     # --- Expensive stage, run once -------------------------------------------------
     seed_global_rngs(base.random_seed)
     raw = load_all_participants(base)
-    filtered = apply_asymmetric_iqr_filter(raw, base)
+    filtered = apply_iqr_filter(raw, base)
     proportion = compute_proportion_above_threshold(filtered, base)
     max_peak = compute_average_corrected_max_peak(filtered, base)
 

@@ -28,19 +28,19 @@ class AnalysisConfig:
     n_participants: int = 39
     n_variables_per_condition: int = 4
     random_seed: int = 42
-    simulations_peak: int = 2000
-    simulations_ml: int = 1000
+    simulations_peak: int = 5000
+    simulations_ml: int = 100000
     high_activity_threshold: float = 100.0
     iqr_multiplier: float = 3.0
     rf_n_estimators: int = 100
     test_size: float = 0.2
     # Train/test splitting strategy:
-    #   "random"  -> plain row-wise random split (the original paper / notebook). A
+    #   "random"  -> plain row-wise random split (original 2023 notebooks). A
     #                participant's gesture and mouse rows may fall on opposite sides.
     #   "grouped" -> participant-level split (GroupShuffleSplit on participant id):
     #                both rows of a participant always stay together, preventing
     #                cross-condition leakage within a participant.
-    split_strategy: str = "random"
+    split_strategy: str = "grouped"
     data_dir: Path = Path("data")
     output_dir: Path = Path("output")
     # Sheet names carry a double space, matching the raw Bitbrain export.

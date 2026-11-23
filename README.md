@@ -24,17 +24,17 @@ The analysis lives in the `eeg_gesture_classifier` package and is run through `m
 
 2.  **Outlier Management** (`outliers.py`):
     *   Per-participant Interquartile Range (IQR) filter (outer boundary, multiplier = 3), with the range computed on the pooled gesture+mouse signal.
-    *   Gesture and mouse are handled differently by design: gesture out-of-range values are **clamped** to the boundary, while mouse out-of-range values are **dropped**.
+    *   Out-of-range values are replaced by the boundary value in **both** conditions, as described in the article (Appendix A.2). Correction of 23-11-2026: the original 2023 notebooks replaced gesture values but deleted mouse values; that logic is kept in `apply_original_asymmetric_filter` for documentation only.
 
 3.  **Feature Extraction & Metrics** (`features.py`):
     *   **Proportion of High Activity**: fraction of data points exceeding a threshold of 100.
-    *   **Duration Correction**: since gestural sessions were generally longer, a random-removal simulation (`simulations_peak = 2000`) equalizes durations before peak analysis.
+    *   **Duration Correction**: since gestural sessions were generally longer, a random-removal simulation (`simulations_peak = 5000`) equalizes durations before peak analysis.
     *   **Average Max Peak**: highest peak of brain activity, averaged over the simulations.
 
 4.  **Classification** (`classification.py`):
     *   **Model**: Random Forest Classifier (`sklearn.ensemble.RandomForestClassifier`, 100 trees).
     *   **Features**: max peak of Engagement and Valence, plus proportion-above-threshold of Memorization and Workload.
-    *   **Training**: averaged over `simulations_ml = 1000` random train/test splits.
+    *   **Training**: averaged over `simulations_ml = 100000` participant-grouped train/test splits (both sessions of a participant always stay on the same side).
     *   **Evaluation**: Accuracy, Precision, Recall, F1-score, confusion matrix, and feature importances.
 
 All configuration (paths, thresholds, simulation counts, the random seed) is centralized in `eeg_gesture_classifier/config.py`. The run is seeded (`random_seed = 42`) and reproducible.
@@ -43,10 +43,11 @@ All configuration (paths, thresholds, simulation counts, the random seed) is cen
 
 ```
 main.py                       # entry point: runs the full pipeline
+recalcul_tableaux_eeg.py      # recomputes Tables 6 and 7 of the article (correction of 23-11-2026)
 eeg_gesture_classifier/
 ├── config.py                 # AnalysisConfig dataclass + shared types
 ├── data_loading.py           # read, filter and clean the raw .xlsx files
-├── outliers.py               # asymmetric IQR filter
+├── outliers.py               # IQR filter, boundary replacement in both conditions (corrected 23-11-2026)
 ├── features.py               # proportion, mean, duration-corrected max peak
 ├── classification.py         # Random Forest simulations + results
 └── io_results.py             # write CSV outputs
@@ -68,7 +69,18 @@ The code requires the following Python libraries:
 *   `pandas`
 *   `numpy`
 *   `scikit-learn`
+*   `scipy` (statistical tests in `recalcul_tableaux_eeg.py`)
 *   `openpyxl` (reading the input `.xlsx` data files via `pandas.read_excel`)
+
+## Correction of 23-11-2026
+
+The original notebooks (2023) replaced out-of-range values by the IQR boundary in the gesture session but deleted them in the mouse session. This asymmetry is not part of the published method (Appendix A.2 of the article) and favours the gesture condition by construction. The pipeline now applies boundary replacement in both conditions (`apply_iqr_filter`); the original logic is kept in `apply_original_asymmetric_filter` for documentation only.
+
+`recalcul_tableaux_eeg.py` recomputes Tables 6 and 7 of the article with the corrected filter (Wilcoxon signed-rank tests, d_z and d_rm with 95% CIs, per presentation order), the session means and medians, and the order effect on the EEG summaries. It also checks that the same tests applied to the previously published result files reproduce the published tables. Usage:
+
+```bash
+uv run python recalcul_tableaux_eeg.py --raw data --donnees <folder with the questionnaire and published result files> --sortie output
+```
 
 ## Outputs
 
