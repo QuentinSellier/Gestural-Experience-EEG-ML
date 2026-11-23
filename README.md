@@ -34,7 +34,7 @@ The analysis lives in the `eeg_gesture_classifier` package and is run through `m
 4.  **Classification** (`classification.py`):
     *   **Model**: Random Forest Classifier (`sklearn.ensemble.RandomForestClassifier`, 100 trees).
     *   **Features**: max peak of Engagement and Valence, plus proportion-above-threshold of Memorization and Workload.
-    *   **Training**: averaged over `simulations_ml = 100000` participant-grouped train/test splits (both sessions of a participant always stay on the same side).
+    *   **Training**: averaged over `simulations_ml = 10000` participant-grouped train/test splits (both sessions of a participant always stay on the same side).
     *   **Evaluation**: Accuracy, Precision, Recall, F1-score, confusion matrix, and feature importances.
 
 All configuration (paths, thresholds, simulation counts, the random seed) is centralized in `eeg_gesture_classifier/config.py`. The run is seeded (`random_seed = 42`) and reproducible.

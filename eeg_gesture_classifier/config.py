@@ -29,7 +29,7 @@ class AnalysisConfig:
     n_variables_per_condition: int = 4
     random_seed: int = 42
     simulations_peak: int = 5000
-    simulations_ml: int = 100000
+    simulations_ml: int = 10000
     high_activity_threshold: float = 100.0
     iqr_multiplier: float = 3.0
     rf_n_estimators: int = 100
