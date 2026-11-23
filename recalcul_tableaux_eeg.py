@@ -1,4 +1,4 @@
-"""Statistical comparison of the EEG summaries (Tables 6 and 7 of the article).
+"""Statistical comparison of the EEG summaries (Tables 4 and 5 of the article).
 
 For each participant and condition, the script computes the duration-corrected
 average maximum peak, the proportion of values above 100, and the session mean and
@@ -146,7 +146,7 @@ def fmt_p(p: float) -> str:
 
 
 def latex_table(rows: list[dict], dec: int, kind: str) -> str:
-    """Rows in the format of Tables 6 and 7 of the article."""
+    """Rows in the format of Tables 4 and 5 of the article."""
     word = "peak" if kind == "peak" else "proportion"
     out = []
     for col, name in ROWS:
@@ -216,14 +216,14 @@ def main() -> None:
         pd.DataFrame(prop, index=pid, columns=cols).rename_axis("Participant").to_excel(w, sheet_name="Proportions")
         pd.DataFrame(means, index=pid, columns=cols).rename_axis("Participant").to_excel(w, sheet_name="Means")
         pd.DataFrame(medians, index=pid, columns=cols).rename_axis("Participant").to_excel(w, sheet_name="Medians")
-        pd.DataFrame(t6).to_excel(w, sheet_name="Table 6", index=False)
-        pd.DataFrame(t7).to_excel(w, sheet_name="Table 7", index=False)
+        pd.DataFrame(t6).to_excel(w, sheet_name="Table 4 (peaks)", index=False)
+        pd.DataFrame(t7).to_excel(w, sheet_name="Table 5 (proportions)", index=False)
         pd.DataFrame(mm).to_excel(w, sheet_name="Means and medians", index=False)
         pd.DataFrame(order).to_excel(w, sheet_name="Order effect", index=False)
 
-    (args.out / "tables_6_7.tex").write_text(
-        "% Table 6 (peaks)\n" + latex_table(t6, 2, "peak")
-        + "\n\n% Table 7 (proportions)\n" + latex_table(t7, 4, "proportion") + "\n",
+    (args.out / "tables_4_5.tex").write_text(
+        "% Table 4 (peaks)\n" + latex_table(t6, 2, "peak")
+        + "\n\n% Table 5 (proportions)\n" + latex_table(t7, 4, "proportion") + "\n",
         encoding="utf-8",
     )
     print("Done:", args.out)

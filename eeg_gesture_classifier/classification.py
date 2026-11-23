@@ -35,7 +35,7 @@ class ClassificationResults:
 
 
 def feature_names(config: AnalysisConfig) -> list[str]:
-    """Return descriptive names for the four classifier features, in column order."""
+    """Return descriptive names for the classifier features, in column order."""
     peak = [f"max_peak_{METRIC_NAMES[index]}" for index in config.peak_feature_cols]
     proportion = [
         f"prop_above_threshold_{METRIC_NAMES[index]}" for index in config.prop_feature_cols
