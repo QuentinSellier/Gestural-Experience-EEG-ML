@@ -45,9 +45,10 @@ class AnalysisConfig:
     output_dir: Path = Path("output")
     # Sheet names carry a double space, matching the raw Bitbrain export.
     tab_names: tuple[str, str] = ("t01  Test_gestures", "t02  Test_mouse")
-    # Features used by the classifier (column indices into a 4-metric block).
-    peak_feature_cols: tuple[int, int] = (0, 2)  # max peak: engagement, valence
-    prop_feature_cols: tuple[int, int] = (1, 3)  # proportion>threshold: memorization, workload
+    # Features used by the classifier (column indices into a 4-metric block): the
+    # max peak and the proportion above threshold of all four metrics (8 features).
+    peak_feature_cols: tuple[int, ...] = (0, 1, 2, 3)
+    prop_feature_cols: tuple[int, ...] = (0, 1, 2, 3)
 
     @property
     def participant_ids(self) -> list[int]:
