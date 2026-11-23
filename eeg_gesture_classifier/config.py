@@ -35,7 +35,7 @@ class AnalysisConfig:
     rf_n_estimators: int = 100
     test_size: float = 0.2
     # Train/test splitting strategy:
-    #   "random"  -> plain row-wise random split (original 2023 notebooks). A
+    #   "random"  -> plain row-wise random split. A
     #                participant's gesture and mouse rows may fall on opposite sides.
     #   "grouped" -> participant-level split (GroupShuffleSplit on participant id):
     #                both rows of a participant always stay together, preventing

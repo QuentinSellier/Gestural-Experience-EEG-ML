@@ -1,22 +1,19 @@
-"""Recalcul des tableaux 6 et 7 (EEG) après correction du traitement des valeurs extrêmes.
+"""Statistical comparison of the EEG summaries (Tables 6 and 7 of the article).
 
-Correction du 23-11-2026. Ce script :
-1. charge les exports BitBrain bruts (39 participants, phase catalogue uniquement) ;
-2. applique le filtre IQR de la méthode publiée (remplacement par la borne dans les
-   DEUX conditions, voir eeg_gesture_classifier/outliers.py) ;
-3. calcule, par participant et par condition, le pic maximal moyen (correction de durée,
-   5 000 simulations), la proportion de valeurs > 100, la moyenne et la médiane ;
-4. reproduit les tests des tableaux 6 et 7 (Wilcoxon signé, asymptotique, correction des
-   ex aequo, unilatéral dans le sens des hypothèses, d_z et d_rm avec IC à 95 %), pour
-   l'échantillon complet et pour chaque ordre de présentation ;
-5. compare l'effet d'ordre (test de Welch sur les écarts gestes moins souris) ;
-6. vérifie que le même calcul appliqué aux fichiers publiés redonne les valeurs publiées ;
-7. écrit un classeur Excel et les tableaux LaTeX corrigés.
+For each participant and condition, the script computes the duration-corrected
+average maximum peak, the proportion of values above 100, and the session mean and
+median of the four EEG indicators, after the IQR filter of the pipeline. It then
+compares the gestural and mouse conditions with Wilcoxon signed-rank tests
+(asymptotic, ties corrected, one-tailed in the hypothesized direction), with paired
+effect sizes d_z and d_rm and their 95% CIs, for the full sample and for each
+presentation order. It also compares the gesture-minus-mouse differences between the
+two presentation orders with Welch's t-tests.
 
-Usage (depuis le dossier Code) :
-    python recalcul_tableaux_eeg.py
-Les chemins par défaut supposent l'arborescence du dossier « Soumission dernier article
-de thèse » ; ils peuvent être changés avec --raw, --donnees et --sortie.
+Usage:
+    python recalcul_tableaux_eeg.py --raw data --order <questionnaire .xlsx> --out output
+
+The questionnaire file provides the presentation order of each participant
+(column 18, "1ère modalité"); it is not distributed with this repository.
 """
 
 from __future__ import annotations
@@ -35,18 +32,18 @@ from eeg_gesture_classifier.features import (
     compute_average_corrected_max_peak,
     compute_proportion_above_threshold,
 )
-from eeg_gesture_classifier.outliers import apply_iqr_filter, apply_original_asymmetric_filter
+from eeg_gesture_classifier.outliers import apply_iqr_filter
 
-# Ordre des indicateurs dans les données : engagement, memorization, valence, workload.
-# Ordre et libellés des lignes dans les tableaux de l'article.
+# Indicator order in the data: engagement, memorization, valence, workload.
+# Row order and labels used in the article tables.
 ROWS = [(3, "Cognitive Load"), (0, "Engagement"), (2, "Attraction"), (1, "Memorization")]
 FILE_COLS = ["Enga", "Memo", "Vale", "Work"]
 
 
 # ----------------------------------------------------------------------------- stats
 def wilcoxon_one_tailed(gesture: np.ndarray, mouse: np.ndarray) -> tuple[float, float]:
-    """Wilcoxon signé asymptotique (ex aequo corrigés, sans correction de continuité),
-    unilatéral dans le sens gestes > souris. Retourne (|Z|, p unilatéral)."""
+    """Asymptotic Wilcoxon signed-rank test (ties corrected, no continuity correction),
+    one-tailed in the direction gesture > mouse. Returns (|Z|, one-tailed p)."""
     d = np.round(gesture - mouse, 10)
     d = d[d != 0]
     n = len(d)
@@ -59,7 +56,7 @@ def wilcoxon_one_tailed(gesture: np.ndarray, mouse: np.ndarray) -> tuple[float, 
 
 
 def dz_with_ci(diff: np.ndarray) -> tuple[float, float, float]:
-    """d_z = moyenne(écarts) / ET(écarts), IC à 95 % par la loi de t non centrée."""
+    """d_z = mean(differences) / SD(differences), 95% CI from the noncentral t distribution."""
     n = len(diff)
     dz = diff.mean() / diff.std(ddof=1)
     t_obs = dz * np.sqrt(n)
@@ -73,7 +70,7 @@ def dz_with_ci(diff: np.ndarray) -> tuple[float, float, float]:
             if np.isfinite(fa) and np.isfinite(fb) and fa * fb < 0:
                 return optimize.brentq(f, a, b) / np.sqrt(n)
             width *= 2
-        # Repli (très grands t) : approximation normale de l'erreur-type de d_z.
+        # Fallback for very large t: normal approximation of the standard error of d_z.
         se = np.sqrt(1 / n + dz**2 / (2 * n))
         return dz + (1.96 if q == 0.025 else -1.96) * se
 
@@ -121,7 +118,7 @@ def table_rows(values: np.ndarray, mouse_first: np.ndarray, metric_name: str) ->
         g, m = values[:, col], values[:, col + 4]
         for group, mask in (("C→G", mouse_first), ("G→C", ~mouse_first), ("All", np.ones(len(g), bool))):
             res = compare(g[mask], m[mask])
-            rows.append({"Mesure": metric_name, "Indicateur": name, "Groupe": group, **res})
+            rows.append({"Measure": metric_name, "Indicator": name, "Group": group, **res})
     return rows
 
 
@@ -129,7 +126,7 @@ def order_rows(values: np.ndarray, mouse_first: np.ndarray, metric_name: str) ->
     rows = []
     for col, name in ROWS:
         d = values[:, col] - values[:, col + 4]
-        rows.append({"Mesure": metric_name, "Indicateur": name, **welch(d[mouse_first], d[~mouse_first])})
+        rows.append({"Measure": metric_name, "Indicator": name, **welch(d[mouse_first], d[~mouse_first])})
     return rows
 
 
@@ -149,16 +146,16 @@ def fmt_p(p: float) -> str:
 
 
 def latex_table(rows: list[dict], dec: int, kind: str) -> str:
-    """Tableau au format des tableaux 6 et 7 de l'article."""
+    """Rows in the format of Tables 6 and 7 of the article."""
     word = "peak" if kind == "peak" else "proportion"
     out = []
     for col, name in ROWS:
-        sub = [r for r in rows if r["Indicateur"] == name]
-        sig = [r for r in sub if r["Groupe"] == "All"][0]["p_unilateral"] < 0.05
+        sub = [r for r in rows if r["Indicator"] == name]
+        sig = [r for r in sub if r["Group"] == "All"][0]["p_unilateral"] < 0.05
         interp = f"Exploratory: higher {word}" if sig else "Exploratory: no difference"
         out.append(f"% {name.upper()}")
         for i, r in enumerate(sub):
-            grp = "(All)" if r["Groupe"] == "All" else ("(C$\\rightarrow$G)" if r["Groupe"] == "C→G" else "(G$\\rightarrow$C)")
+            grp = "(All)" if r["Group"] == "All" else ("(C$\\rightarrow$G)" if r["Group"] == "C→G" else "(G$\\rightarrow$C)")
             first = f"\\multirow{{6}}{{*}}{{\\textsc{{{name}}}}}" if i == 0 else ""
             last = f"\\multirow{{6}}{{*}}{{{interp}}}" if i == 0 else ""
             dz = f"{r['dz']:.2f} ([{r['dz_lo']:.2f};{r['dz_hi']:.2f}], {label(r['dz'])})"
@@ -172,9 +169,9 @@ def latex_table(rows: list[dict], dec: int, kind: str) -> str:
                 f" & Gestural {grp} & {fmt(r['M_G'], dec)} & {fmt(r['SD_G'], dec)} & "
                 f"[{fmt(r['CI_lo_G'], dec)};{fmt(r['CI_hi_G'], dec)}] & & & {drm} & \\\\"
             )
-            if r["Groupe"] == "C→G":
+            if r["Group"] == "C→G":
                 out.append("\\cdashlinelr{2-8}")
-            elif r["Groupe"] == "G→C":
+            elif r["Group"] == "G→C":
                 out.append("\\cmidrule{2-8}")
         out.append("\\midrule")
     out[-1] = "\\bottomrule"
@@ -183,33 +180,22 @@ def latex_table(rows: list[dict], dec: int, kind: str) -> str:
 
 # ----------------------------------------------------------------------------- main
 def main() -> None:
-    here = Path(__file__).resolve().parent
-    base = here.parent.parent
     ap = argparse.ArgumentParser()
-    ap.add_argument("--raw", type=Path, default=base / "Données" / "Exported_rawData EEG (backup)")
-    ap.add_argument("--donnees", type=Path, default=base / "Données")
-    ap.add_argument("--sortie", type=Path, default=here.parent / "Résultats")
+    ap.add_argument("--raw", type=Path, default=Path("data"))
+    ap.add_argument("--order", type=Path, required=True)
+    ap.add_argument("--out", type=Path, default=Path("output"))
     args = ap.parse_args()
-    args.sortie.mkdir(parents=True, exist_ok=True)
+    args.out.mkdir(parents=True, exist_ok=True)
 
     config = replace(AnalysisConfig(), data_dir=args.raw)
     seed_global_rngs(config.random_seed)
     raw = load_all_participants(config)
 
-    # Ordre de présentation, tiré du fichier des questionnaires (colonne « 1ère modalité »).
-    q = pd.read_excel(args.donnees / "Données questionnaires.xlsx", header=None)
+    q = pd.read_excel(args.order, header=None)
     ids = q.iloc[2:41, 0].astype(int).tolist()
-    assert ids == config.participant_ids, "ordre des participants différent"
+    assert ids == config.participant_ids, "participant order differs"
     mouse_first = q.iloc[2:41, 17].astype(str).str.strip().str.lower().str.startswith("souris").to_numpy()
-    assert mouse_first.sum() == 21
 
-    # Vérification : le filtre d'origine redonne les proportions publiées.
-    published_prop = pd.read_excel(args.donnees / "Proportion of high brain activity.xlsx").iloc[:, 1:].to_numpy()
-    published_peak = pd.read_excel(args.donnees / "Highest bain activity.xlsx").iloc[:, 1:].to_numpy()
-    original_prop = compute_proportion_above_threshold(apply_original_asymmetric_filter(raw, config), config)
-    exact_share = float((np.abs(original_prop - published_prop) < 1e-9).mean())
-
-    # Calcul corrigé.
     filtered = apply_iqr_filter(raw, config)
     prop = compute_proportion_above_threshold(filtered, config)
     means = np.array([[np.mean(x) for x in p] for p in filtered])
@@ -217,61 +203,30 @@ def main() -> None:
     seed_global_rngs(config.random_seed)
     peak = compute_average_corrected_max_peak(filtered, config)
 
-    # Tests.
-    t6 = table_rows(peak, mouse_first, "Pic")
+    t6 = table_rows(peak, mouse_first, "Peak")
     t7 = table_rows(prop, mouse_first, "Proportion")
-    t6_pub = table_rows(published_peak, mouse_first, "Pic (publié)")
-    t7_pub = table_rows(published_prop, mouse_first, "Proportion (publiée)")
-    mm = [r for r in table_rows(means, mouse_first, "Moyenne") + table_rows(medians, mouse_first, "Médiane")
-          if r["Groupe"] == "All"]
-    order = order_rows(peak, mouse_first, "Pic") + order_rows(prop, mouse_first, "Proportion")
+    mm = [r for r in table_rows(means, mouse_first, "Mean") + table_rows(medians, mouse_first, "Median")
+          if r["Group"] == "All"]
+    order = order_rows(peak, mouse_first, "Peak") + order_rows(prop, mouse_first, "Proportion")
 
-    # Excel.
-    cols = [f"{n}_{c}" for c in ("gestes", "souris") for n in FILE_COLS]
+    cols = [f"{n}_{c}" for c in ("gesture", "mouse") for n in FILE_COLS]
     pid = config.participant_ids
-    xlsx = args.sortie / "Tableau - Recalcul EEG corrigé - 23-11-26.xlsx"
-    with pd.ExcelWriter(xlsx) as w:
-        pd.DataFrame({
-            "Élément": [
-                "Traitement des valeurs extrêmes",
-                "Simulations de correction de durée (pics)",
-                "Graine aléatoire",
-                "Seuil d'activité élevée",
-                "Participants (souris d'abord / gestes d'abord)",
-                "Proportions publiées reproduites exactement par le filtre d'origine",
-            ],
-            "Valeur": [
-                "IQR × 3, bornes par participant sur les deux sessions, remplacement par la borne dans les deux conditions",
-                config.simulations_peak, config.random_seed, config.high_activity_threshold,
-                f"39 ({int(mouse_first.sum())} / {int((~mouse_first).sum())})",
-                f"{exact_share:.1%}",
-            ],
-        }).to_excel(w, sheet_name="Paramètres", index=False)
-        pd.DataFrame(peak, index=pid, columns=cols).rename_axis("Participant").to_excel(w, sheet_name="Pics corrigés")
-        pd.DataFrame(prop, index=pid, columns=cols).rename_axis("Participant").to_excel(w, sheet_name="Proportions corrigées")
-        pd.DataFrame(means, index=pid, columns=cols).rename_axis("Participant").to_excel(w, sheet_name="Moyennes corrigées")
-        pd.DataFrame(medians, index=pid, columns=cols).rename_axis("Participant").to_excel(w, sheet_name="Médianes corrigées")
-        pd.DataFrame(t6).to_excel(w, sheet_name="Tableau 6 corrigé", index=False)
-        pd.DataFrame(t7).to_excel(w, sheet_name="Tableau 7 corrigé", index=False)
-        comp = []
-        for pub, cor in ((t6_pub, t6), (t7_pub, t7)):
-            for a, b in zip(pub, cor):
-                if a["Groupe"] == "All":
-                    comp.append({"Mesure": b["Mesure"], "Indicateur": b["Indicateur"],
-                                 "Z publié": a["Z"], "p publié": a["p_unilateral"], "d_z publié": a["dz"],
-                                 "Z corrigé": b["Z"], "p corrigé": b["p_unilateral"], "d_z corrigé": b["dz"]})
-        pd.DataFrame(comp).to_excel(w, sheet_name="Avant-après", index=False)
-        pd.DataFrame(mm).to_excel(w, sheet_name="Moyennes et médianes", index=False)
-        pd.DataFrame(order).to_excel(w, sheet_name="Effet d'ordre EEG", index=False)
+    with pd.ExcelWriter(args.out / "eeg_comparisons.xlsx") as w:
+        pd.DataFrame(peak, index=pid, columns=cols).rename_axis("Participant").to_excel(w, sheet_name="Peaks")
+        pd.DataFrame(prop, index=pid, columns=cols).rename_axis("Participant").to_excel(w, sheet_name="Proportions")
+        pd.DataFrame(means, index=pid, columns=cols).rename_axis("Participant").to_excel(w, sheet_name="Means")
+        pd.DataFrame(medians, index=pid, columns=cols).rename_axis("Participant").to_excel(w, sheet_name="Medians")
+        pd.DataFrame(t6).to_excel(w, sheet_name="Table 6", index=False)
+        pd.DataFrame(t7).to_excel(w, sheet_name="Table 7", index=False)
+        pd.DataFrame(mm).to_excel(w, sheet_name="Means and medians", index=False)
+        pd.DataFrame(order).to_excel(w, sheet_name="Order effect", index=False)
 
-    (args.sortie / "Tableaux 6 et 7 corrigés (lignes LaTeX).tex").write_text(
-        "% Tableau 6 (pics), lignes à coller entre \\midrule et \\bottomrule\n"
-        + latex_table(t6, 2, "peak")
-        + "\n\n% Tableau 7 (proportions), lignes à coller entre \\midrule et \\bottomrule\n"
-        + latex_table(t7, 4, "proportion") + "\n",
+    (args.out / "tables_6_7.tex").write_text(
+        "% Table 6 (peaks)\n" + latex_table(t6, 2, "peak")
+        + "\n\n% Table 7 (proportions)\n" + latex_table(t7, 4, "proportion") + "\n",
         encoding="utf-8",
     )
-    print("Terminé :", xlsx)
+    print("Done:", args.out)
 
 
 if __name__ == "__main__":
